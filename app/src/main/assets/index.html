@@ -1,0 +1,201 @@
+<html xmlns:visibility="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport"
+                content="width = device-width, user-scalable=no, shrink-to-fit=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <title>Nodemcu Adafruit Home Automation</title>
+
+        <link href="style.css" rel="stylesheet" type="text/css">
+
+        <script>
+          if (window.hyper && window.hyper.log) {
+            console.log = hyper.log;
+          }
+        </script>
+    </head>
+    <body>
+        <div id="homePage" class="homePage">
+            <h1 id="header">Welcome! Tap Connect button to Connect to device</h1>
+            <br /><br />
+            <button class="connect wide" id="connect" onclick="connectToAdafruit()">CONNECT</button>
+            <br />
+            <button class="disconnect wide" onclick="disconnectFromAdafruit()">DISCONNECT</button>
+            <br />
+            <button class="aboutUs wide" id="aboutUs" onClick="aboutUs()">About Us</button>
+        </div>
+
+        <div id="controlPage" class="connectionPage" style="visibility: hidden;">
+            <label class="cdHeader">
+                <img src="file:///android_asset/back.png" class="back" align="left" onclick="homePage()">
+                Control Devices
+            </label>
+            <br /><br />
+
+            <h2>Light</h2>
+            <button class="green big" id="lightOn" onclick="LightON()" >ON</button>
+            <button class="red big" id="lightOff" onclick="LightOFF()">OFF</button>
+            <br /><br />
+            <h2>Door</h2>
+            <button class="green big" id="doorOpen" onclick="DoorOpen()">OPEN</button>
+            <button class="red big" id="doorClose" onclick="DoorClose()">CLOSE</button>
+        </div>
+
+        <div id="aboutUsPage" class="aboutUsPage" style="visibility: hidden";>
+            <label class="cdHeader">
+                <img src="file:///android_asset/back.png" class="back" align="left" onclick="homePage()">
+                About Us
+            </label>
+            <p>
+                <b>Home Automation</b> is a simple mobile application developed for controlling the home appliances.
+                We the team <b>PN2</b> <i>(Pradip, Nirdesh and Niraj)</i> has developed this application for achieving home automation.
+            </p>
+            <p>
+
+            </p>
+        </div>
+
+        <script type="text/javascript" src="file:///android_asset/mqtt.js"></script>
+        <script src="file:///android_asset/jquery.min.js"></script>
+
+        <script type="text/javascript">
+          var url = "wss://io.adafruit.com:443/mqtt/";
+          var username = "pradip_gi";
+          var aio_key = "0700d4c748864317bd28db5b6a93441d";
+          var topic = username + "/feeds/";
+          var client;
+          var homeWrapper = document.getElementById("homePage");
+          var controlWrapper = document.getElementById("controlPage");
+          var aboutUsWrapper = document.getElementById("aboutUsPage");
+          var buttonLightOn = document.getElementById("lightOn");
+          var buttonLightOff = document.getElementById("lightOff");
+          var buttonDoorOpen = document.getElementById("doorOpen");
+          var buttonDoorClose = document.getElementById("doorClose");
+          var statusLight="OFF";
+          var statusDoor="OFF";
+          var connectBtn = document.getElementById("connect");
+
+          function connectToAdafruit() {
+            if(Android.isNetworkAvailable()){
+                client = mqtt.connect(url, {
+                    username: username,
+                    password: aio_key,
+                    useSSL: true
+                });
+                setTimeout(visibility,2000);
+                setTimeout(changeStatus,2000);
+            }
+            else{
+                javascript: showToast('No internet access!');
+            }
+          }
+
+          function visibility(){
+            connectBtn.innerHTML = "CONNECTED";
+            javascript: showToast('Connected');
+            homeWrapper.style.visibility = "hidden";
+            controlWrapper.style.visibility = "visible";
+          }
+
+          function changeStatus(){
+                if(statusLight == "ON"){
+                    buttonLightOn.style.backgroundColor = "Gainsboro";
+                    buttonLightOff.style.backgroundColor = "OrangeRed";
+                }
+                else{
+                    buttonLightOn.style.backgroundColor = "LightSeaGreen";
+                    buttonLightOff.style.backgroundColor = "Gainsboro";
+                }
+                if(statusDoor == "ON"){
+                    buttonDoorOpen.style.backgroundColor = "Gainsboro";
+                    buttonDoorClose.style.backgroundColor = "OrangeRed";
+                }
+                else{
+                    buttonDoorOpen.style.backgroundColor = "LightSeaGreen";
+                    buttonDoorClose.style.backgroundColor = "Gainsboro";
+                }
+          }
+
+          function LightON() {
+            javascript: showToast('Light is ON');
+            statusLight="ON";
+            client.publish(
+              "pradip_gi/feeds/light/json",
+              JSON.stringify({ value: "ON" })
+            );
+            buttonLightOn.disabled = true;
+            buttonLightOff.disabled = false;
+            if(statusLight == "ON"){
+                buttonLightOn.style.backgroundColor = "Gainsboro";
+                buttonLightOff.style.backgroundColor = "OrangeRed";
+            }
+          }
+
+          function LightOFF() {
+            javascript: showToast('Light is OFF');
+            statusLight="OFF";
+            client.publish(
+              "pradip_gi/feeds/light/json",
+              JSON.stringify({ value: "OFF" })
+            );
+            buttonLightOn.disabled = false;
+            buttonLightOff.disabled = true;
+            if(statusLight == "OFF"){
+                buttonLightOn.style.backgroundColor = "LightSeaGreen";
+                buttonLightOff.style.backgroundColor = "Gainsboro";
+            }
+          }
+
+          function DoorOpen() {
+            javascript: showToast('Door Opened');
+            statusDoor="ON";
+            client.publish(
+              "pradip_gi/feeds/door/json",
+              JSON.stringify({ value: statusDoor })
+            );
+            buttonDoorOpen.disabled = true;
+            buttonDoorClose.disabled = false;
+            if(statusDoor == "ON"){
+                buttonDoorOpen.style.backgroundColor = "Gainsboro";
+                buttonDoorClose.style.backgroundColor = "OrangeRed";
+            }
+          }
+
+          function DoorClose() {
+            javascript: showToast('Door Closed');
+            statusDoor="OFF";
+            client.publish(
+              "pradip_gi/feeds/door/json",
+              JSON.stringify({ value: statusDoor })
+            );
+            buttonDoorOpen.disabled = false;
+            buttonDoorClose.disabled = true;
+             if(statusDoor == "OFF"){
+                buttonDoorOpen.style.backgroundColor = "LightSeaGreen";
+                buttonDoorClose.style.backgroundColor = "Gainsboro";
+            }
+          }
+
+          function showToast(str){
+            Android.showToast(str);
+          }
+
+          function homePage(){
+            homeWrapper.style.visibility = "visible";
+            controlWrapper.style.visibility = "hidden";
+            aboutUsWrapper.style.visibility = "hidden";
+          }
+
+          function disconnectFromAdafruit(){
+            connectBtn.innerHTML = "CONNECT";
+            javascript: showToast('Disconnected');
+            mqtt.disconnect();
+          }
+
+          function aboutUs(){
+            homeWrapper.style.visibility = "hidden";
+            aboutUsWrapper.style.visibility = "visible";
+          }
+        </script>
+    </body>
+</html>
